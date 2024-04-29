@@ -1,4 +1,5 @@
 package ewb.ewb;
+
 import java.io.File;
 import java.io.IOException;
 
@@ -8,43 +9,45 @@ import javax.sound.sampled.Clip;
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.UnsupportedAudioFileException;
 
-import org.yaml.snakeyaml.scanner.Scanner;
+import java.util.Scanner;
 
 public class SR {
 
-    Long currentFrame; 
-    Clip clip; 
-      
-    // current status of clip 
-    String status; 
-      
-    AudioInputStream audioInputStream; 
-    static String filePath; 
-  
-    // constructor to initialize streams and clip 
-    public SR() 
-        throws UnsupportedAudioFileException, 
-        IOException, LineUnavailableException  
-    { 
-        // create AudioInputStream object 
-        audioInputStream =  
-                AudioSystem.getAudioInputStream(new File(filePath).getAbsoluteFile()); 
-          
-        // create clip reference 
-        clip = AudioSystem.getClip(); 
-          
-        // open audioInputStream to the clip 
-        clip.open(audioInputStream); 
-          
-        clip.loop(Clip.LOOP_CONTINUOUSLY); 
-    } 
-    public void play()  
-    { 
-        //start the clip 
-        clip.start(); 
-          
-        status = "play"; 
-    } 
+
+    Long currentFrame;
+    Clip clip;
+
+    // current status of clip
+    String status;
+
+    AudioInputStream audioInputStream;
+    String[] filePaths; // Array to store file paths of sounds
+
+    // constructor to initialize streams and clip
+    public SR(String[] filePaths)
+            throws UnsupportedAudioFileException, IOException, LineUnavailableException {
+        this.filePaths = filePaths;
+        // create clip reference
+        clip = AudioSystem.getClip();
+    }
+
+    public void play(int soundIndex) throws UnsupportedAudioFileException, IOException, LineUnavailableException {
+        if (soundIndex >= 0 && soundIndex < filePaths.length) {
+            // create AudioInputStream object
+            audioInputStream = AudioSystem.getAudioInputStream(new File(filePaths[soundIndex]).getAbsoluteFile());
+
+            // open audioInputStream to the clip
+            clip.open(audioInputStream);
+
+            clip.loop(Clip.LOOP_CONTINUOUSLY);
+
+            // Start the clip
+            clip.start();
+            status = "play";
+        } else {
+            System.out.println("Invalid sound index.");
+        }
+    }
       
     // Method to pause the audio 
     public void pause()  
@@ -73,7 +76,7 @@ public class SR {
         clip.close(); 
         resetAudioStream(); 
         clip.setMicrosecondPosition(currentFrame); 
-        this.play(); 
+        this.play(0); 
     } 
       
     // Method to restart the audio 
@@ -85,7 +88,7 @@ public class SR {
         resetAudioStream(); 
         currentFrame = 0L; 
         clip.setMicrosecondPosition(0); 
-        this.play(); 
+        this.play(0); 
     } 
       
     // Method to stop the audio 
@@ -108,7 +111,7 @@ public class SR {
             resetAudioStream(); 
             currentFrame = c; 
             clip.setMicrosecondPosition(c); 
-            this.play(); 
+            this.play(0); 
         } 
     } 
       
@@ -117,12 +120,12 @@ public class SR {
                                             LineUnavailableException  
     { 
         audioInputStream = AudioSystem.getAudioInputStream( 
-        new File(filePath).getAbsoluteFile()); 
+        new File(status).getAbsoluteFile()); 
         clip.open(audioInputStream); 
         clip.loop(Clip.LOOP_CONTINUOUSLY); 
     } 
       
-    private void gotoChoice(int c) 
+    public void gotoChoice(int c) // Removed "private" keyword
             throws IOException, LineUnavailableException, UnsupportedAudioFileException  
     { 
         switch (c)  
@@ -145,15 +148,8 @@ public class SR {
                 Scanner sc = new Scanner(System.in); 
                 long c1 = sc.nextLong(); 
                 jump(c1); 
+                sc.close(); // Moved this line from the catch block
                 break; 
-    
-         sc.close();
-        }catch (Exception ex)
-		{ 
-		System.out.println("Error with playing sound."); 
-		ex.printStackTrace(); 
-	  
-	  } 
-
-
+        } 
+    }
 }
